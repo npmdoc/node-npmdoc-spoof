@@ -1,0 +1,660 @@
+<html><head></head><body><div class="apidocDiv">
+<style>
+/*csslint
+*/
+.apidocDiv {
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.apidocDiv a[href] {
+    color: #33f;
+    font-weight: bold;
+    text-decoration: none;
+}
+.apidocDiv a[href]:hover {
+    text-decoration: underline;
+}
+.apidocCodeCommentSpan {
+    background: #bbf;
+    color: #000;
+    display: block;
+}
+.apidocCodeKeywordSpan {
+    color: #d00;
+    font-weight: bold;
+}
+.apidocCodePre {
+    background: #eef;
+    border: 1px solid;
+    color: #777;
+    padding: 5px;
+    white-space: pre-wrap;
+}
+.apidocFooterDiv {
+    margin-top: 20px;
+    text-align: center;
+}
+.apidocModuleLi {
+    margin-top: 10px;
+}
+.apidocSectionDiv {
+    border-top: 1px solid;
+    margin-top: 20px;
+}
+.apidocSignatureSpan {
+    color: #777;
+    font-weight: bold;
+}
+</style>
+<h1>api documentation for
+    <a href="http://feross.org/spoofmac/">spoof (v1.2.0)</a>
+</h1>
+<h4>Easily spoof your MAC address in OS X &amp; Linux</h4>
+<div class="apidocSectionDiv"><a href="#apidoc.tableOfContents" id="apidoc.tableOfContents"><h1>table of contents</h1></a><ol>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.spoof">module spoof</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.spoof.findInterface">
+            function <span class="apidocSignatureSpan">spoof.</span>findInterface
+            <span class="apidocSignatureSpan">(target)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.spoof.findInterfaces">
+            function <span class="apidocSignatureSpan">spoof.</span>findInterfaces
+            <span class="apidocSignatureSpan">(targets)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.spoof.getInterfaceMAC">
+            function <span class="apidocSignatureSpan">spoof.</span>getInterfaceMAC
+            <span class="apidocSignatureSpan">(device)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.spoof.normalize">
+            function <span class="apidocSignatureSpan">spoof.</span>normalize
+            <span class="apidocSignatureSpan">(mac)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.spoof.random">
+            function <span class="apidocSignatureSpan">spoof.</span>random
+            <span class="apidocSignatureSpan">(localAdmin)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.spoof.setInterfaceMAC">
+            function <span class="apidocSignatureSpan">spoof.</span>setInterfaceMAC
+            <span class="apidocSignatureSpan">(device, mac, port)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.spoof.tryWindowsKey">
+            function <span class="apidocSignatureSpan">spoof.</span>tryWindowsKey
+            <span class="apidocSignatureSpan">(key, mac, device)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <span class="apidocSignatureSpan">object <span class="apidocSignatureSpan">spoof.</span>WIRELESS_PORT_NAMES</span>
+
+        </li>
+
+    </ol></li>
+
+</ol></div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.spoof" id="apidoc.module.spoof">module spoof</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.spoof.findInterface" id="apidoc.element.spoof.findInterface">
+        function <span class="apidocSignatureSpan">spoof.</span>findInterface
+        <span class="apidocSignatureSpan">(target)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">findInterface = function (target) {
+  var interfaces = exports.findInterfaces([target])
+  return interfaces &amp;&amp; interfaces[0]
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.spoof.findInterfaces" id="apidoc.element.spoof.findInterfaces">
+        function <span class="apidocSignatureSpan">spoof.</span>findInterfaces
+        <span class="apidocSignatureSpan">(targets)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">findInterfaces = function (targets) {
+  targets = targets || []
+
+  targets = targets.map(function (target) {
+    return target.toLowerCase()
+  })
+
+  var output, interfaces, details, result, i, port, device, address, it, j, target, lines
+
+  if (process.platform === 'darwin') {
+    // Parse the output of `networksetup -listallhardwareports` which gives
+    // us 3 fields per port:
+    // - the port name,
+    // - the device associated with this port, if any,
+    // - the MAC address, if any, otherwise 'N/A'
+
+    try {
+      output = cp.execSync('networksetup -listallhardwareports').toString()
+    } catch (err) {
+      throw err
+    }
+    details = []
+    while (true) {
+      result = /(?:Hardware Port|Device|Ethernet Address): (.+)/.exec(output)
+      if (!result || !result[1]) {
+        break
+      }
+      details.push(result[1])
+      output = output.slice(result.index + result[1].length)
+    }
+
+    interfaces = [] // to return
+
+    // Split the results into chunks of 3 (for our three fields) and yield
+    // those that match `targets`.
+    for (i = 0; i &lt; details.length; i += 3) {
+      port = details[i]
+      device = details[i + 1]
+      address = details[i + 2]
+
+      address = MAC_ADDRESS_RE.exec(address.toUpperCase())
+      if (address) {
+        address = exports.normalize(address[0])
+      }
+
+      it = {
+        address: address,
+        currentAddress: exports.getInterfaceMAC(device),
+        device: device,
+        port: port
+      }
+
+      if (targets.length === 0) {
+        // Not trying to match anything in particular, return everything.
+        interfaces.push(it)
+        continue
+      }
+
+      for (j = 0; j &lt; targets.length; j++) {
+        target = targets[j]
+        if (target === port.toLowerCase() || target === device.toLowerCase()) {
+          interfaces.push(it)
+          break
+        }
+      }
+    }
+  } else if (process.platform === 'linux') {
+    // Parse the output of `ifconfig` which gives us:
+    // - the adapter description
+    // - the adapter name/device associated with this, if any,
+    // - the MAC address, if any
+    try {
+      output = cp.execSync('ifconfig', { stdio: 'pipe' }).toString()
+    } catch (err) {
+      throw err
+    }
+
+    details = []
+    while (true) {
+      result = /(.*?)HWaddr(.*)/mi.exec(output)
+      if (!result || !result[1] || !result[2]) {
+        break
+      }
+      details.push(result[1], result[2])
+      output = output.slice(result.index + result[0].length)
+    }
+
+    interfaces = []
+
+    for (i = 0; i &lt; details.length; i += 2) {
+      var s = details[i].split(':')
+      if (s.length &gt;= 2) {
+        device = s[0].split(' ')[0]
+        port = s[1].trim()
+      }
+
+      address = details[i + 1].trim()
+      if (address) {
+        address = exports.normalize(address)
+      }
+
+      it = {
+        address: address,
+        currentAddress: exports.getInterfaceMAC(device),
+        device: device,
+        port: port
+      }
+
+      if (targets.length === 0) {
+        // Not trying to match anything in particular, return everything.
+        interfaces.push(it)
+        continue
+      }
+
+      for (j = 0; j &lt; targets.length; j++) {
+        target = targets[j]
+        if (target === port.toLowerCase() || target === device.toLowerCase()) {
+          interfaces.push(it)
+          break
+        }
+      }
+    }
+  } else if (process.platform === 'win32') {
+    try {
+      output = cp.execSync('ipconfig /all', { stdio: 'pipe' }).toString()
+    } catch (err) {
+      throw err
+    }
+
+    details = []
+    interfaces = []
+    lines = output.split('\n')
+    it = false
+    for (i = 0; i &lt; lines.length; i++) {
+      // Check if new device
+      if (lines[i].substr(0, 1).match(/[A-Z]/)) {
+        if (it) {
+          if (targets.length === 0) {
+            // Not trying to match anything in particular, return everything.
+            interfaces.push(it)
+          } else {
+            for (j = 0; j &lt; targets.length; j++) {
+              target = targets[j]
+              if (target === it.port.toLowerCase() || target === it.device.toLowerCase()) {
+                interfaces.push(it)
+                break ...</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+
+/**
+* Returns the first interface which matches `target`
+* @param  {string} target
+* @return {Object}
+*/
+exports.findInterface = function (target) {
+ var interfaces = exports.<span class="apidocCodeKeywordSpan">findInterfaces</span>([target])
+ return interfaces &amp;&amp; interfaces[0]
+}
+
+/**
+* Returns currently-set MAC address of given interface. This is distinct from the
+* interface's hardware MAC address.
+* @return {string}
+...</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.spoof.getInterfaceMAC" id="apidoc.element.spoof.getInterfaceMAC">
+        function <span class="apidocSignatureSpan">spoof.</span>getInterfaceMAC
+        <span class="apidocSignatureSpan">(device)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">getInterfaceMAC = function (device) {
+  var output, address
+
+  if (process.platform === 'darwin' || process.platform === 'linux') {
+    try {
+      output = cp.execSync(quote(['ifconfig', device]), { stdio: 'pipe' }).toString()
+    } catch (err) {
+      return null
+    }
+
+    address = MAC_ADDRESS_RE.exec(output)
+    return address &amp;&amp; exports.normalize(address[0])
+  } else if (process.platform === 'win32') {
+    console.error('No windows support for this method yet - PR welcome!')
+  }
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+address = MAC_ADDRESS_RE.exec(address.toUpperCase())
+if (address) {
+  address = exports.normalize(address[0])
+}
+
+it = {
+  address: address,
+  currentAddress: exports.<span class="apidocCodeKeywordSpan">getInterfaceMAC</span>(device),
+  device: device,
+  port: port
+}
+
+if (targets.length === 0) {
+  // Not trying to match anything in particular, return everything.
+  interfaces.push(it)
+...</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.spoof.normalize" id="apidoc.element.spoof.normalize">
+        function <span class="apidocSignatureSpan">spoof.</span>normalize
+        <span class="apidocSignatureSpan">(mac)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">normalize = function (mac) {
+  var m = CISCO_MAC_ADDRESS_RE.exec(mac)
+  if (m) {
+    var halfwords = m.slice(1)
+    mac = halfwords.map(function (halfword) {
+      return zeroFill(4, halfword)
+    }).join('')
+    return chunk(mac, 2).join(':').toUpperCase()
+  }
+
+  m = MAC_ADDRESS_RE.exec(mac)
+  if (m) {
+    var bytes = m.slice(1)
+    return bytes
+      .map(function (byte) {
+        return zeroFill(2, byte)
+      })
+      .join(':')
+      .toUpperCase()
+  }
+
+  // return None
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+    for (i = 0; i &lt; details.length; i += 3) {
+port = details[i]
+device = details[i + 1]
+address = details[i + 2]
+
+address = MAC_ADDRESS_RE.exec(address.toUpperCase())
+if (address) {
+  address = exports.<span class="apidocCodeKeywordSpan">normalize</span>(address[0])
+}
+
+it = {
+  address: address,
+  currentAddress: exports.getInterfaceMAC(device),
+  device: device,
+  port: port
+...</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.spoof.random" id="apidoc.element.spoof.random">
+        function <span class="apidocSignatureSpan">spoof.</span>random
+        <span class="apidocSignatureSpan">(localAdmin)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">random = function (localAdmin) {
+  // Randomly assign a VM vendor's MAC address prefix, which should
+  // decrease chance of colliding with existing device's addresses.
+
+  var vendors = [
+    [ 0x00, 0x05, 0x69 ], // VMware
+    [ 0x00, 0x50, 0x56 ], // VMware
+    [ 0x00, 0x0C, 0x29 ], // VMware
+    [ 0x00, 0x16, 0x3E ], // Xen
+    [ 0x00, 0x03, 0xFF ], // Microsoft Hyper-V, Virtual Server, Virtual PC
+    [ 0x00, 0x1C, 0x42 ], // Parallels
+    [ 0x00, 0x0F, 0x4B ], // Virtual Iron 4
+    [ 0x08, 0x00, 0x27 ]  // Sun Virtual Box
+  ]
+
+  // Windows needs specific prefixes sometimes
+  // http://www.wikihow.com/Change-a-Computer's-Mac-Address-in-Windows
+  var windowsPrefixes = [
+    'D2',
+    'D6',
+    'DA',
+    'DE'
+  ]
+
+  var vendor = vendors[Math.floor(Math.random() * vendors.length)]
+
+  if (process.platform === 'win32') {
+    vendor[0] = windowsPrefixes[random(0, 3)]
+  }
+
+  var mac = [
+    vendor[0],
+    vendor[1],
+    vendor[2],
+    random(0x00, 0x7f),
+    random(0x00, 0xff),
+    random(0x00, 0xff)
+  ]
+
+  if (localAdmin) {
+    // Universally administered and locally administered addresses are
+    // distinguished by setting the second least significant bit of the
+    // most significant byte of the address. If the bit is 0, the address
+    // is universally administered. If it is 1, the address is locally
+    // administered. In the example address 02-00-00-00-00-01 the most
+    // significant byte is 02h. The binary is 00000010 and the second
+    // least significant bit is 1. Therefore, it is a locally administered
+    // address.[3] The bit is 0 in all OUIs.
+    mac[0] |= 2
+  }
+
+  return mac
+    .map(function (byte) {
+      return zeroFill(2, byte.toString(16))
+    })
+    .join(':').toUpperCase()
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+var windowsPrefixes = [
+  'D2',
+  'D6',
+  'DA',
+  'DE'
+]
+
+var vendor = vendors[Math.floor(Math.<span class="apidocCodeKeywordSpan">random</span>() * vendors.length)]
+
+if (process.platform === 'win32') {
+  vendor[0] = windowsPrefixes[random(0, 3)]
+}
+
+var mac = [
+  vendor[0],
+...</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.spoof.setInterfaceMAC" id="apidoc.element.spoof.setInterfaceMAC">
+        function <span class="apidocSignatureSpan">spoof.</span>setInterfaceMAC
+        <span class="apidocSignatureSpan">(device, mac, port)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">setInterfaceMAC = function (device, mac, port) {
+  if (!MAC_ADDRESS_RE.exec(mac)) {
+    throw new Error(mac + ' is not a valid MAC address')
+  }
+
+  var isWirelessPort = port &amp;&amp; WIRELESS_PORT_NAMES.indexOf(port.toLowerCase()) &gt;= 0
+
+  if (process.platform === 'darwin') {
+    if (isWirelessPort) {
+      // Turn on the device, assuming it's an airport device.
+      try {
+        cp.execSync(quote(['networksetup', '-setairportpower', device, 'on']))
+      } catch (err) {
+        throw new Error('Unable to power on wifi device')
+      }
+    }
+
+    // For some reason this seems to be required even when changing a non-airport device.
+    try {
+      cp.execSync(quote([PATH_TO_AIRPORT, '-z']))
+    } catch (err) {
+      throw new Error('Unable to disassociate from wifi networks')
+    }
+
+    // Change the MAC.
+    try {
+      cp.execSync(quote(['ifconfig', device, 'ether', mac]))
+    } catch (err) {
+      throw new Error('Unable to change MAC address')
+    }
+
+    // Restart airport so it will associate with known networks (if any)
+    if (isWirelessPort) {
+      try {
+        cp.execSync(quote(['networksetup', '-setairportpower', device, 'off']))
+        cp.execSync(quote(['networksetup', '-setairportpower', device, 'on']))
+      } catch (err) {
+        throw new Error('Unable to set restart wifi device')
+      }
+    }
+  } else if (process.platform === 'linux') {
+    // Set the device's mac address.
+    // Handles shutting down and starting back up interface.
+    try {
+      cp.execSync(quote(['ifconfig', device, 'down', 'hw', 'ether', mac]))
+      cp.execSync(quote(['ifconfig', device, 'up']))
+    } catch (err) {
+      throw new Error('Unable to change MAC address')
+    }
+  } else if (process.platform === 'win32') {
+    // Locate adapter's registry and update network address (mac)
+    var regKey = new Winreg({
+      hive: Winreg.HKLM,
+      key: WIN_REGISTRY_PATH
+    })
+
+    regKey.keys(function (err, keys) {
+      if (err) {
+        console.log('ERROR: ' + err)
+      } else {
+        // Loop over all available keys and find the right adapter
+        for (var i = 0; i &lt; keys.length; i++) {
+          exports.tryWindowsKey(keys[i].key, mac, device)
+        }
+      }
+    })
+  }
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.spoof.tryWindowsKey" id="apidoc.element.spoof.tryWindowsKey">
+        function <span class="apidocSignatureSpan">spoof.</span>tryWindowsKey
+        <span class="apidocSignatureSpan">(key, mac, device)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">tryWindowsKey = function (key, mac, device) {
+  // Skip the Properties key to avoid problems with permissions
+  if (key.indexOf('Properties') &gt; -1) {
+    return false
+  }
+
+  var networkAdapterKeyPath = new Winreg({
+    hive: Winreg.HKLM,
+    key: key
+  })
+
+  // we need to format the MAC a bit for Windows
+  mac = mac.replace(/:/g, '')
+
+  networkAdapterKeyPath.values(function (err, values) {
+    var gotAdapter = false
+    if (err) {
+      console.log('ERROR: ' + err)
+    } else {
+      for (var x = 0; x &lt; values.length; x++) {
+        if (values[x].name === 'AdapterModel') {
+          gotAdapter = true
+          break
+        }
+      }
+
+      if (gotAdapter) {
+        networkAdapterKeyPath.set('NetworkAddress', 'REG_SZ', mac, function () {
+          try {
+            cp.execSync('netsh interface set interface "' + device + '" disable')
+            cp.execSync('netsh interface set interface "' + device + '" enable')
+          } catch (err) {
+            throw new Error('Unable to restart device, is the cmd running as admin?')
+          }
+        })
+      }
+    }
+  })
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+
+    regKey.keys(function (err, keys) {
+      if (err) {
+        console.log('ERROR: ' + err)
+      } else {
+        // Loop over all available keys and find the right adapter
+        for (var i = 0; i &lt; keys.length; i++) {
+          exports.<span class="apidocCodeKeywordSpan">tryWindowsKey</span>(keys[i].key, mac, device)
+        }
+      }
+    })
+  }
+}
+
+/**
+...</pre></li>
+    </ul>
+
+
+
+
+</div>
+
+<div class="apidocFooterDiv">
+    [ this document was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</div>
+</body></html>
