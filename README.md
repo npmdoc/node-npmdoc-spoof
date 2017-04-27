@@ -1,6 +1,6 @@
 # npmdoc-spoof
 
-#### api documentation for  [spoof (v1.2.0)](http://feross.org/spoofmac/)  [![npm package](https://img.shields.io/npm/v/npmdoc-spoof.svg?style=flat-square)](https://www.npmjs.org/package/npmdoc-spoof) [![travis-ci.org build-status](https://api.travis-ci.org/npmdoc/node-npmdoc-spoof.svg)](https://travis-ci.org/npmdoc/node-npmdoc-spoof)
+#### basic api documentation for  [spoof (v1.2.0)](http://feross.org/spoofmac/)  [![npm package](https://img.shields.io/npm/v/npmdoc-spoof.svg?style=flat-square)](https://www.npmjs.org/package/npmdoc-spoof) [![travis-ci.org build-status](https://api.travis-ci.org/npmdoc/node-npmdoc-spoof.svg)](https://travis-ci.org/npmdoc/node-npmdoc-spoof)
 
 #### Easily spoof your MAC address in OS X & Linux
 
