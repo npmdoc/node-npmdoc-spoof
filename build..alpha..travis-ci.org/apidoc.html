@@ -149,7 +149,23 @@
   var interfaces = exports.findInterfaces([target])
   return interfaces &#x26;&#x26; interfaces[0]
 }</pre></li>
-    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+if (cmd === &#x27;set&#x27;) {
+  mac = argv._[1]
+  devices = argv._.slice(2)
+
+  devices.forEach(function (device) {
+var it
+try {
+  it = spoof.<span class="apidocCodeKeywordSpan">findInterface</span>(device)
+} catch (err) {
+  error(err)
+}
+
+if (!it) {
+  error(new Error(&#x27;Could not find device for &#x27; + device))
+}
+...</pre></li>
     </ul>
 
 
@@ -583,7 +599,23 @@ var mac = [
     })
   }
 }</pre></li>
-    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+
+function setMACAddress (device, mac, port) {
+ if (process.platform !== &#x27;win32&#x27; &#x26;&#x26; process.getuid() !== 0) {
+   error(new Error(&#x27;Must run as root (or using sudo) to change network settings&#x27;))
+ }
+
+ try {
+   spoof.<span class="apidocCodeKeywordSpan">setInterfaceMAC</span>(device, mac, port)
+ } catch (err) {
+   error(err)
+ }
+}
+
+/**
+* Print error and terminate the program
+...</pre></li>
     </ul>
 
 
